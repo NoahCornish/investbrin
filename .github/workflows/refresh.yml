@@ -1,0 +1,53 @@
+name: Update PnL Data
+
+on:
+  schedule:
+    - cron: '1 21 * * 1-5'  # Runs at 21:01 UTC (4:01 PM EST)
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  update-pnl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'  # Use the latest stable Python version
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No dependencies required."
+          fi
+
+      - name: Run update script
+        run: python updatePNL_final.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes at this time."
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            echo "Changes detected. Preparing to commit."
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+
+      - name: Commit and push changes
+        if: env.HAS_CHANGES == 'true'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git commit -m "Automated update: PnL Data"
+          git push
+
+      - name: Exit gracefully if no changes
+        if: env.HAS_CHANGES == 'false'
+        run: echo "No changes at this time. Exiting gracefully."

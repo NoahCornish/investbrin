@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brinley RRSP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            font-size: 24px;
+            width: 100%;
+        }
+        nav {
+            background: #444;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 90%;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .data-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .data-box {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 200px;
+            flex: 1;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            min-width: 800px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            color: white;
+            width: 100%;
+        }
+        @media (max-width: 600px) {
+            header {
+                font-size: 20px;
+                padding: 15px 0;
+            }
+            .container {
+                padding: 15px;
+            }
+            .data-box {
+                width: 100%;
+            }
+            footer {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+    </style>
+     <script>
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('overall_summary.csv');
+                const data = await response.text();
+                const rows = data.split('\n');
+                const values = rows[1].split(',');
+                
+                document.getElementById('market-value').innerText = `$${parseFloat(values[0]).toLocaleString()} CAD`;
+                document.getElementById('pnl').innerText = `$${parseFloat(values[1]).toLocaleString()} CAD`;
+                document.getElementById('annual-div').innerText = `$${parseFloat(values[2]).toLocaleString()} CAD`;
+                document.getElementById('monthly-div').innerText = `$${parseFloat(values[3]).toLocaleString()} CAD`;
+                document.getElementById('daily-div').innerText = `$${parseFloat(values[4]).toLocaleString()} CAD`;
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        }
+        async function fetchCurrencySummaries() {
+            try {
+                const cadResponse = await fetch('cad_summary.csv');
+                const usdResponse = await fetch('usd_summary.csv');
+                const cadData = await cadResponse.text();
+                const usdData = await usdResponse.text();
+                
+                const cadValues = cadData.split('\n');
+                const usdValues = usdData.split('\n');
+                
+                document.getElementById('cad-summary').innerHTML = `
+                    <p><strong>Market Value:</strong> $${parseFloat(cadValues[1].split(',')[1]).toLocaleString()} CAD</p>
+                    <p><strong>PnL:</strong> $${parseFloat(cadValues[2].split(',')[1]).toLocaleString()} CAD</p>
+                    <p><strong>Annual Dividend:</strong> $${parseFloat(cadValues[3].split(',')[1]).toLocaleString()} CAD</p>`;
+                
+                document.getElementById('usd-summary').innerHTML = `
+                    <p><strong>Market Value:</strong> $${parseFloat(usdValues[1].split(',')[1]).toLocaleString()} USD</p>
+                    <p><strong>PnL:</strong> $${parseFloat(usdValues[2].split(',')[1]).toLocaleString()} USD</p>
+                    <p><strong>Annual Dividend:</strong> $${parseFloat(usdValues[3].split(',')[1]).toLocaleString()} USD</p>`;
+            } catch (error) {
+                console.error('Error fetching currency summary data:', error);
+            }
+        }
+        async function fetchPortfolio() {
+            try {
+                const response = await fetch('portfolio_report.csv');
+                const data = await response.text();
+                const rows = data.split('\n');
+                let table = document.getElementById('portfolio-table');
+                table.innerHTML = '<tr><th>Stock</th><th>Shares</th><th>Avg Cost</th><th>Close</th><th>Div Amount</th><th>Market Value (CAD)</th><th>Weight</th><th>PnL</th></tr>';
+                for (let i = 1; i < rows.length; i++) {
+                    let cols = rows[i].split(',');
+                    if (cols.length > 1) {
+                        table.innerHTML += `<tr><td>${cols[0]}</td><td>${cols[1]}</td><td>$${cols[2]}</td><td>$${cols[4]}</td><td>$${cols[3]}</td><td>$${cols[8]}</td><td>${cols[9]}%</td><td>$${cols[10]}</td></tr>`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching portfolio data:', error);
+            }
+        }
+        window.onload = function() {
+            fetchDashboardData();
+            fetchCurrencySummaries();
+            fetchPortfolio();
+        }
+    </script>
+</head>
+<body>
+    <header>
+        Brinley RRSP
+    </header>
+    <nav>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#portfolio">Portfolio Report</a>
+    </nav>
+    <div id="dashboard" class="container">
+        <h1>Performance</h1>
+        <div class="data-boxes">
+            <div class="data-box"><h3>Market Value</h3><p id="market-value">Loading...</p></div>
+            <div class="data-box"><h3>PnL</h3><p id="pnl">Loading...</p></div>
+            <div class="data-box"><h3>Annual Dividend</h3><p id="annual-div">Loading...</p></div>
+            <div class="data-box"><h3>Monthly Dividend</h3><p id="monthly-div">Loading...</p></div>
+            <div class="data-box"><h3>Daily Dividend</h3><p id="daily-div">Loading...</p></div>
+        </div>
+        <div class="data-boxes">
+            <div class="data-box"><h3>CAD Summary</h3><div id="cad-summary">Loading...</div></div>
+            <div class="data-box"><h3>USD Summary</h3><div id="usd-summary">Loading...</div></div>
+        </div>
+        <div id="portfolio" class="container">
+            <h1>Portfolio</h1>
+            <div class="table-container">
+                <table id="portfolio-table"></table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

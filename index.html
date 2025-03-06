@@ -146,7 +146,26 @@ footer {
 }
 
     </style>
+
+<script>
+    function verifyPassword() {
+        let password = prompt("Enter Password to Access the Page:");
+        if (password === "cricklewood") {
+            document.body.style.display = "block"; // Show the content
+            fetchDashboardData();  // Fetch Market Data
+            fetchCurrencySummaries();  // Fetch Currency Data
+            fetchPortfolio();  // Fetch Portfolio Data
+        } else {
+            alert("Incorrect Password. Access Denied.");
+            document.body.innerHTML = "<h1 style='color: red; text-align: center;'>Access Denied</h1>"; // Block access
+        }
+    }
+</script>
+
+
+    
      <script>
+        
         async function fetchDashboardData() {
             try {
                 const response = await fetch('overall_summary.csv');
@@ -210,7 +229,8 @@ footer {
         }
     </script>
 </head>
-<body>
+<body onload="verifyPassword()">
+
     <header>
         Brinley RRSP
     </header>
